@@ -1,0 +1,3456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buloke — WhatsApp Bot Flow + Message Templates</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117;
+  --surface: #161b22;
+  --surface2: #1c2128;
+  --border: #30363d;
+  --border2: #21262d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #484f58;
+  --green: #3fb950;
+  --green-bg: rgba(63,185,80,0.1);
+  --green-border: rgba(63,185,80,0.3);
+  --blue: #58a6ff;
+  --blue-bg: rgba(88,166,255,0.1);
+  --blue-border: rgba(88,166,255,0.3);
+  --amber: #d29922;
+  --amber-bg: rgba(210,153,34,0.1);
+  --amber-border: rgba(210,153,34,0.3);
+  --purple: #a371f7;
+  --purple-bg: rgba(163,113,247,0.1);
+  --purple-border: rgba(163,113,247,0.3);
+  --red: #f85149;
+  --red-bg: rgba(248,81,73,0.08);
+}
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.6; min-height: 100vh; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { font-weight: 600; font-size: 15px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.topbar-logo span { color: var(--green); }
+.topbar-sep { color: var(--border); font-size: 18px; font-weight: 300; }
+.topbar-meta { color: var(--text2); font-size: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.topbar-meta span::before { content: '·'; margin-right: 10px; color: var(--text3); }
+.topbar-meta span:first-child::before { display: none; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; letter-spacing: 0.2px; white-space: nowrap; }
+.badge-marketing { background: var(--amber-bg); color: #e3b341; border: 1px solid var(--amber-border); }
+.badge-utility   { background: var(--blue-bg);  color: var(--blue);  border: 1px solid var(--blue-border); }
+.badge-internal  { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+.badge-bot       { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.legend { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 8px 32px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.tabs { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; gap: 0; overflow-x: auto; }
+.tab { padding: 12px 20px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: color 0.15s, border-color 0.15s; border-top: none; border-left: none; border-right: none; background: none; font-family: inherit; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+.main { max-width: 960px; margin: 0 auto; padding: 36px 32px 80px; }
+.flow-heading { margin-bottom: 6px; }
+.flow-heading h2 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.flow-meta { color: var(--text2); font-size: 12px; margin-bottom: 28px; line-height: 1.5; }
+.flow-meta strong { color: var(--text); }
+.trigger-block { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: 6px; padding: 14px 18px; margin-bottom: 4px; }
+.trigger-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); font-weight: 600; margin-bottom: 5px; }
+.trigger-title { font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+.trigger-desc { color: var(--text2); font-size: 12px; line-height: 1.6; }
+.trigger-note { margin-top: 8px; font-size: 12px; color: var(--text2); background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 4px; padding: 6px 10px; }
+.connector { display: flex; align-items: stretch; gap: 0; margin: 0; }
+.connector-line { width: 1px; background: var(--border); margin: 0 0 0 20px; flex-shrink: 0; min-height: 20px; }
+.connector-label { padding: 6px 0 6px 16px; font-size: 11px; color: var(--text3); font-style: italic; align-self: center; }
+.template-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.template-row.single { grid-template-columns: 1fr; }
+.tcard { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.tcard-header { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid var(--border2); }
+.tcard-code { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; color: var(--text2); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; white-space: nowrap; flex-shrink: 0; }
+.tcard-right { flex: 1; min-width: 0; }
+.tcard-title { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 2px; }
+.tcard-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
+.tcard-body { padding: 10px 14px 12px; }
+.tcard-desc { color: var(--text2); font-size: 12px; line-height: 1.7; margin-bottom: 8px; }
+.tcard-timing { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tcard-privacy { font-size: 11px; color: var(--purple); margin-top: 4px; }
+.stage-div { display: flex; align-items: center; gap: 12px; margin: 28px 0 16px; }
+.stage-div-line { flex: 1; height: 1px; background: var(--border2); }
+.stage-div-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text3); white-space: nowrap; }
+.direction { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 6px; }
+.flow-end { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; margin-top: 8px; font-size: 12px; color: var(--text2); line-height: 1.6; }
+.flow-end strong { color: var(--text); }
+.note { border-radius: 6px; padding: 10px 14px; font-size: 12px; line-height: 1.6; margin: 12px 0; }
+.note-green  { background: var(--green-bg);  border: 1px solid var(--green-border);  color: #7ee787; }
+.note-amber  { background: var(--amber-bg);  border: 1px solid var(--amber-border);  color: #e3b341; }
+.note-blue   { background: var(--blue-bg);   border: 1px solid var(--blue-border);   color: #79c0ff; }
+.note-purple { background: var(--purple-bg); border: 1px solid var(--purple-border); color: #d2a8ff; }
+.qr-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.qr { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green); white-space: nowrap; }
+.wa-preview { background: #111b21; border: 1px solid #1f2c34; border-radius: 8px; padding: 12px; margin-top: 8px; max-width: 340px; }
+.wa-bubble { background: #1f2c34; color: #e8ede9; border-radius: 6px 6px 6px 0; padding: 8px 11px; font-size: 12.5px; line-height: 1.6; margin-bottom: 3px; white-space: pre-line; }
+.wa-bubble strong { color: #fff; }
+.wa-bubble em { font-style: italic; color: #a0adb6; }
+.wa-time { font-size: 10px; color: rgba(180,180,180,0.4); text-align: right; margin-bottom: 6px; }
+.section { display: none; }
+.section.active { display: block; }
+.template-text { background: var(--bg); border: 1px solid var(--border2); border-radius: 6px; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--text2); line-height: 1.85; white-space: pre-wrap; margin-top: 8px; }
+.template-text .var { color: #ffa657; }
+.template-text strong { color: var(--text); font-weight: 500; }
+.vars-line { font-size: 11px; color: var(--text3); margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+.project-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+.project-table th { text-align: left; padding: 8px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); border-bottom: 1px solid var(--border); font-weight: 600; }
+.project-table td { padding: 10px 12px; border-bottom: 1px solid var(--border2); color: var(--text2); vertical-align: top; line-height: 1.5; }
+.project-table tr:last-child td { border-bottom: none; }
+.proj-name { font-weight: 600; color: var(--text); font-size: 13px; }
+.proj-code { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--green); background: var(--green-bg); padding: 2px 6px; border-radius: 3px; }
+code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--green); background: var(--green-bg); padding: 1px 5px; border-radius: 3px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+@media (max-width: 640px) { .topbar, .main, .tabs, .legend { padding-left: 16px; padding-right: 16px; } .template-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Buloke <span>🌳</span></div>
+  <div class="topbar-sep">—</div>
+  <div class="topbar-meta">
+    <span>WhatsApp Bot Flow + Message Templates</span>
+    <span>buloke.com · Hebbal HQ, Bangalore</span>
+    <span>6 flows · 40+ templates · all message copy included</span>
+    <span>🔒 First name + project in alerts only</span>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="badge badge-marketing">Marketing</span> — promotional, needs opt-in</div>
+  <div class="legend-item"><span class="badge badge-utility">Utility</span> — transactional, no opt-in needed</div>
+  <div class="legend-item"><span class="badge badge-internal">Internal</span> — team/CRM only, never to client · 🔒 first name + project only</div>
+  <div class="legend-item"><span class="badge badge-bot">Bot</span> — automated conversation</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('bot', this)">0 · WhatsApp Bot</button>
+  <button class="tab" onclick="showTab('enquiry', this)">1 · Website Enquiry</button>
+  <button class="tab" onclick="showTab('crm', this)">2 · CRM Pipeline</button>
+  <button class="tab" onclick="showTab('ads', this)">3 · Meta Ads</button>
+  <button class="tab" onclick="showTab('events', this)">4 · Events / Realty Lounge</button>
+  <button class="tab" onclick="showTab('internal', this)">5 · Internal Ops</button>
+  <button class="tab" onclick="showTab('postbooking', this)">6 · Post-Booking Journey</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════════════════
+     TAB 0 — WHATSAPP BOT
+══════════════════════════════════════════════════ -->
+<div id="bot" class="section active">
+  <div class="flow-heading"><h2>WhatsApp Bot Flow</h2></div>
+  <div class="flow-meta">Triggered on any first message to Buloke's WhatsApp number · Short, intent-first design · Qualifies budget & location before recommending a project · Captures lead and hands off to rep · <strong>No pricing mentioned at any point</strong></div>
+
+  <div class="note note-amber"><strong>Design principle:</strong> This bot is intentionally short. The goal is to understand intent, route to the right project, capture contact details, and hand off to a human — not replace your sales team.</div>
+
+  <div class="trigger-block" style="margin-top:20px">
+    <div class="trigger-label">Trigger</div>
+    <div class="trigger-title">Any first message to Buloke's WhatsApp number</div>
+    <div class="trigger-desc">User clicks WhatsApp link on buloke.com, Meta ad, business card, or types directly · Bot responds instantly</div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Immediately — bot fires</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B1</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Welcome + Intent Check</div>
+          <div class="tcard-name">buloke_bot_welcome</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Greets the user warmly. One open question — no long menus. Five quick-reply options to capture intent immediately. "Other / Just browsing" ensures no one falls through with no path.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Hi there 👋 Welcome to <strong>Buloke Realty</strong>.
+
+We help people access early-stage real estate opportunities in Bangalore — before they go public.
+
+What brings you here today?</div>
+          <div class="wa-time">now</div>
+          <div class="qr-row">
+            <div class="qr">🏠 Looking for a home</div>
+            <div class="qr">💼 Business / office space</div>
+            <div class="qr">🤝 Become a Channel Partner</div>
+            <div class="qr">📋 Shareholding opportunity</div>
+            <div class="qr">💬 Other / Just browsing</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Immediate on first message · No variables</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">User taps "Looking for a home" → Path A</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B2</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Budget Qualifier</div>
+          <div class="tcard-name">buloke_bot_budget</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Single question. Routes to the right project without asking for full details yet. No pricing shown.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Great! To point you to the right project, what's your approximate budget?</div>
+          <div class="qr-row">
+            <div class="qr">Under ₹1 Cr</div>
+            <div class="qr">₹1 Cr – ₹1.5 Cr</div>
+            <div class="qr">₹1.5 Cr – ₹2.5 Cr</div>
+            <div class="qr">Above ₹2.5 Cr</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Path A — after "Looking for a home"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">After budget reply</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B3</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Location Preference</div>
+          <div class="tcard-name">buloke_bot_location</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">One more qualifier. Combined with budget, this lets the bot recommend the most relevant project.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Got it! Any preferred area of Bangalore?</div>
+          <div class="qr-row">
+            <div class="qr">North Bangalore</div>
+            <div class="qr">South Bangalore</div>
+            <div class="qr">East / Sarjapur</div>
+            <div class="qr">West / Mysore Road</div>
+            <div class="qr">Open to all areas</div>
+          </div>
+        </div>
+        <div class="tcard-timing">After budget reply</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Bot maps budget + location → best matching project</div></div>
+
+  <!-- B4 — all 11 project cards -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Personalised Project Recommendation — All 11 Projects</div>
+          <div class="tcard-name">buloke_bot_project_card</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Bot maps budget + location and sends the most relevant project card from the 11 below. No pricing at any point. Each card shows key highlights and Buloke's early-access angle. Quick-reply options are identical across all cards. All 11 messages documented below in routing order.</div>
+        <div class="note note-blue" style="font-size:11.5px">
+          <strong>Bot routing logic — 11 projects (no prices shown):</strong><br>
+          Under ₹1 Cr → B4-1 Shriram Sapphire · B4-2 Shriram 107 Southeast · B4-3 Provident Ecopolitan<br>
+          ₹1–1.5 Cr + North → B4-4 CKPC Winds of Change · B4-5 Assetz The Secret Lake · B4-6 Assetz Promise of Spring<br>
+          ₹1–1.5 Cr + East/Sarjapur → B4-7 Nambiar District 25<br>
+          ₹1.5–2.5 Cr + South → B4-8 Sobha Madison Heights · B4-9 Primus Sangama<br>
+          Above ₹2.5 Cr → B4-10 Mahindra New Haven<br>
+          Farmland / plot + nature → B4-11 Hosachiguru Unnati (any budget slot)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-1 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-1 · Under ₹1 Cr · South Bangalore</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-1</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Shriram Sapphire — Bommasandra</div>
+          <div class="tcard-name">buloke_bot_project_shriram_sapphire</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for budget Under ₹1 Cr + South / Any area. Shriram Sapphire is an established township project by Shriram Properties in Bommasandra, South Bangalore. Well-connected to the Electronic City and Hosur Road tech corridor. RERA registered. Compact 1 &amp; 2 BHK units. Strong rental yield area.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Shriram Sapphire</strong> · Bommasandra, South Bangalore
+
+🏙️ By Shriram Properties — trusted brand, 30+ years
+🏠 1 &amp; 2 BHK · compact, well-planned layouts
+📍 Minutes from Electronic City &amp; Hosur Road tech hub
+🏗️ RERA Approved · strong rental demand zone
+🔒 Pre-launch inventory — not listed on portals
+
+Buloke got in early. Our members access units before public sale.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: Under ₹1 Cr · Location: South / Any · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-2 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-2 · Under ₹1 Cr · South / Any</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-2</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Shriram 107 Southeast — Attibele</div>
+          <div class="tcard-name">buloke_bot_project_shriram_107</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for budget Under ₹1 Cr + South / Open to all areas. Shriram 107 Southeast is located in Attibele on the Bangalore–Hosur corridor — a high-growth zone with strong infra push. Affordable entry point. RERA registered. Ideal for first-time buyers and investors looking at long-term capital appreciation near the Hosur industrial and tech belt.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Shriram 107 Southeast</strong> · Attibele, Bangalore–Hosur Corridor
+
+📈 High-growth corridor — Hosur industrial &amp; tech belt
+🏠 Affordable entry · ideal for first-time buyers
+🛣️ Excellent connectivity: NICE Road, NH-44
+🏗️ RERA Approved · by Shriram Properties
+🔒 Buloke early-access inventory — not on portals yet
+
+One of the best value-for-money plays in South Bangalore right now.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: Under ₹1 Cr · Location: South / Any · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-3 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-3 · Under ₹1 Cr · North Bangalore</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-3</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Provident Ecopolitan — Aerospace Park</div>
+          <div class="tcard-name">buloke_bot_project_provident_ecopolitan</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for budget Under ₹1 Cr + North Bangalore. Provident Ecopolitan is a large-format integrated township by Provident Housing (a Puravankara group company) near the Aerospace Park and KIADB Industrial Area, North Bangalore. 40+ acres. Green-certified. Close to the upcoming Aerospace SEZ and KIAL. Strong infrastructure play for long-term buyers.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Provident Ecopolitan</strong> · Aerospace Park, North Bangalore
+
+🌿 Eco-certified township · 40+ acres of green living
+✈️ Next to Aerospace SEZ &amp; KIAL — major infra upside
+🏠 1, 2 &amp; 3 BHK · well-designed homes
+🏗️ By Provident Housing (Puravankara Group) · RERA Approved
+🔒 Buloke members get pre-launch access — not on portals
+
+High-growth north corridor with serious infrastructure momentum.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: Under ₹1 Cr · Location: North Bangalore · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-4 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-4 · ₹1–1.5 Cr · North Bangalore</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-4</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CKPC Winds of Change — Yelahanka</div>
+          <div class="tcard-name">buloke_bot_project_ckpc_winds</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for ₹1–1.5 Cr + North Bangalore. CKPC Winds of Change is an IGBC Gold certified eco-luxury residential project in Yelahanka. 438 residences — intentionally limited. Vastu-compliant. 1, 2, 2.5, 3 &amp; 4 BHK. Possession Dec 2029. RERA registered. Premium feel at mid-range pricing — a rare combination in North Bangalore.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>CKPC Winds of Change</strong> · Yelahanka, North Bangalore
+
+🌿 IGBC Gold certified · eco-luxury community
+🏠 1, 2, 2.5, 3 &amp; 4 BHK · Vastu-compliant
+🔒 Only 438 residences · intentionally limited
+📅 Possession: Dec 2029 · RERA Approved
+
+Buloke entered this project early — our members get access that's not listed on any portal.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: ₹1–1.5 Cr · Location: North Bangalore · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-5 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-5 · ₹1–1.5 Cr · North Bangalore</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-5</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Assetz The Secret Lake — IVC Road</div>
+          <div class="tcard-name">buloke_bot_project_assetz_secret_lake</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for ₹1–1.5 Cr + North Bangalore. Assetz The Secret Lake is a premium residential project on IVC Road (International Village Convention Road), one of North Bangalore's fastest-growing corridors. Lake-view residences. By Assetz Property Group — known for high-quality construction. Close to Yelahanka and Devanahalli. Strong appreciation outlook with airport proximity.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Assetz The Secret Lake</strong> · IVC Road, North Bangalore
+
+🏞️ Lake-view residences · serene natural setting
+✈️ Minutes from Kempegowda International Airport
+🏗️ By Assetz Property Group · RERA Approved
+🌿 Premium quality, thoughtful green design
+🔒 Buloke early-access — exclusive inventory for our members
+
+IVC Road is one of North Bangalore's fastest-rising corridors right now.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: ₹1–1.5 Cr · Location: North Bangalore · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-6 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-6 · ₹1–1.5 Cr · North / Open · Plots</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-6</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Assetz Promise of Spring — Devanahalli Plots</div>
+          <div class="tcard-name">buloke_bot_project_assetz_promise</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for ₹1–1.5 Cr + North / Open to all. Assetz Promise of Spring is a plotted development near Devanahalli — Bangalore's airport zone. By Assetz Property Group. Plots give buyers full design freedom and strong land appreciation in the airport belt. RERA registered. Best alternative card when user also expresses interest in a plot rather than an apartment.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Assetz Promise of Spring</strong> · Devanahalli, North Bangalore
+
+🌱 Plotted development · build your own home
+✈️ Airport zone — Devanahalli's fastest-growing belt
+📐 Multiple plot sizes · RERA Approved
+🏗️ By Assetz Property Group · proven quality
+🔒 Buloke early-access — members get first pick before public launch
+
+Plots near the airport corridor are among the highest-appreciation assets in Bangalore.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: ₹1–1.5 Cr · Location: North / Any · Plot interest signal · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-7 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-7 · ₹1–1.5 Cr · East / Sarjapur</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-7</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Nambiar District 25 — Sarjapur Road</div>
+          <div class="tcard-name">buloke_bot_project_nambiar_d25</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for ₹1–1.5 Cr + East / Sarjapur. Nambiar District 25 is a township project on Sarjapur Road — Bangalore's most active tech corridor. By Nambiar Builders. Large-format development with multiple amenities. High rental demand from IT professionals at Wipro, Infosys, and surrounding tech parks. RERA registered. Strong secondary market depth.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Nambiar District 25</strong> · Sarjapur Road, East Bangalore
+
+💻 Heart of Bangalore's tech corridor — Wipro, Infosys nearby
+🏘️ Large township · resort-style amenities
+🏠 2 &amp; 3 BHK · high rental demand from IT professionals
+🏗️ By Nambiar Builders · RERA Approved
+🔒 Buloke early-access — inventory before public listing
+
+Sarjapur Road commands some of the strongest rental yields in Bangalore.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: ₹1–1.5 Cr · Location: East / Sarjapur · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-8 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-8 · ₹1.5–2.5 Cr · South Bangalore</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-8</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Sobha Madison Heights — South Bangalore</div>
+          <div class="tcard-name">buloke_bot_project_sobha_madison</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for ₹1.5–2.5 Cr + South Bangalore. Sobha Madison Heights is a premium residential project by Sobha Limited — one of India's most reputed developers, known for in-house construction quality. South Bangalore location with strong social infrastructure. 2 &amp; 3 BHK. Sobha's trademark finish quality and delivery track record make this a low-risk, premium buy. RERA registered.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Sobha Madison Heights</strong> · South Bangalore
+
+⭐ By Sobha Limited — India's most trusted developer
+🏠 2 &amp; 3 BHK · premium finish, in-house construction
+🌆 South Bangalore — excellent social infrastructure
+🏗️ RERA Approved · on-time delivery track record
+🔒 Buloke early-access — pre-launch inventory for members
+
+Sobha builds everything in-house. What you see in the brochure is what you get.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: ₹1.5–2.5 Cr · Location: South Bangalore · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-9 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-9 · ₹1.5–2.5 Cr · West / Mysore Road</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-9</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Primus Sangama — Mysore Road</div>
+          <div class="tcard-name">buloke_bot_project_primus_sangama</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for ₹1.5–2.5 Cr + West / Mysore Road or South. Primus Sangama is a premium project on the Mysore Road corridor — one of Bangalore's infrastructure-rich western belts. NICE Road, BMRC metro expansion, and STRR (Satellite Town Ring Road) all converge near this zone. By Primus. RERA registered. Mid-premium segment with strong capital appreciation outlook due to infra tailwinds.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Primus Sangama</strong> · Mysore Road, West Bangalore
+
+🛣️ NICE Road, Metro &amp; STRR — triple infra advantage
+🏠 2 &amp; 3 BHK · premium mid-range segment
+📈 Mysore Road is one of Bangalore's fastest-appreciating corridors
+🏗️ By Primus · RERA Approved
+🔒 Buloke early-access — units not listed on any portal yet
+
+Infrastructure is the best friend of real estate — this corridor has all three.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: ₹1.5–2.5 Cr · Location: West / Mysore Road · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-10 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-10 · Above ₹2.5 Cr · Any</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-10</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Mahindra New Haven — Singasandra</div>
+          <div class="tcard-name">buloke_bot_project_mahindra_haven</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered for Above ₹2.5 Cr + any location. Mahindra New Haven in Singasandra (South Bangalore) is a premium residential development by Mahindra Lifespaces — a Mahindra Group company. Large, well-amenitised project. South Bangalore with Bannerghatta Road and Outer Ring Road connectivity. Spacious 3 &amp; 4 BHK. Brand trust + quality finish. RERA registered. Premium segment with strong brand-backed delivery assurance.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Mahindra New Haven</strong> · Singasandra, South Bangalore
+
+🏆 By Mahindra Lifespaces (Mahindra Group) — iconic brand
+🏠 Spacious 3 &amp; 4 BHK · large format premium residences
+🌆 Bannerghatta Road &amp; ORR — excellent connectivity
+🎯 Premium amenities · resort-style community living
+🏗️ RERA Approved · Mahindra's delivery track record speaks for itself
+🔒 Buloke early-access — before public launch
+
+At this budget, you deserve a name you can trust completely. Mahindra is that name.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Budget: Above ₹2.5 Cr · Any location · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B4-11 -->
+  <div class="stage-div" style="margin-top:16px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">B4-11 · Any Budget · Farmland / Nature Lifestyle</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B4-11</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Hosachiguru Unnati — Chikballapur Farmland</div>
+          <div class="tcard-name">buloke_bot_project_hosachiguru_unnati</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered at any budget when user signals interest in plots, farmland, nature, or a second home / weekend home lifestyle. Hosachiguru Unnati is a managed farmland / agri-living project near Chikballapur (approx. 60–70 km from Bangalore). By Hosachiguru — specialists in managed organic farm estates. Fully managed — owners don't need to operate it. Strong alternative asset class. Nature community with Nandi Hills backdrop. Suits any budget slot as an alternative-asset add-on conversation.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Based on your preference, here's something worth seeing early 👇
+
+<strong>Hosachiguru Unnati</strong> · Chikballapur, Near Nandi Hills
+
+🌾 Managed organic farm estate · no farming knowledge needed
+🏡 Your own land — second home, weekend retreat, legacy asset
+🏔️ Nandi Hills backdrop · 60 km from Bangalore city
+🌿 Fully managed by Hosachiguru — India's leading farm estate brand
+📜 Legal title · agriculture + lifestyle land
+🔒 Buloke partnership — our members get early allocation
+
+If you've ever dreamed of owning a piece of land outside the city — this is how people are doing it now.</div>
+          <div class="qr-row">
+            <div class="qr">Tell me more</div>
+            <div class="qr">See other projects</div>
+            <div class="qr">Talk to someone now</div>
+          </div>
+        </div>
+        <div class="tcard-timing">Any budget · Triggered on plot / farmland / nature / second home signal · No pricing shown</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">User taps "Tell me more" or "Talk to someone now"</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B5</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Lead Capture — Name Ask</div>
+          <div class="tcard-name">buloke_bot_name_ask</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Soft name ask framed as a benefit. No form feeling. Just a natural conversation step.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Our advisor will personally prepare details and exclusive inventory options for you 📋
+
+Quick — what's your name? (first name is fine)</div>
+        </div>
+        <div class="tcard-timing">After interest shown · Free text reply expected</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">User replies with name → bot acknowledges</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B6</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Lead Capture — Number Confirm</div>
+          <div class="tcard-name">buloke_bot_number_ask</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Confirms the number they're messaging from is fine, or asks if they want to share a different one. Keeps it frictionless.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Nice to meet you! 🙏
+
+Is this the best number for our advisor to reach you? Or would you like to share a different one?</div>
+          <div class="qr-row">
+            <div class="qr">✅ Yes, this number works</div>
+            <div class="qr">📞 Different number</div>
+          </div>
+        </div>
+        <div class="tcard-timing">After name captured · Var: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Number confirmed → CRM entry created → Rep assigned simultaneously</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B7</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Confirmation + Handoff</div>
+          <div class="tcard-name">buloke_bot_handoff</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Clean close. Sets expectation of advisor contact. Offers buloke.com to explore meanwhile. Rep takes over from here — no more bot messages.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">You're all set ✅
+
+Our advisor will reach out within a few hours with your personalised project details and available options.
+
+Meanwhile, explore all our current projects at <strong>buloke.com</strong> 🌐
+
+— Team Buloke, Hebbal HQ 🌳</div>
+          <div class="qr-row">
+            <div class="qr">📞 Call us now</div>
+            <div class="qr">🌐 Visit buloke.com</div>
+          </div>
+        </div>
+        <div class="tcard-timing">After number confirmed · Var: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Separate paths from Welcome message</div><div class="stage-div-line"></div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B8</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Channel Partner Path</div>
+          <div class="tcard-name">buloke_bot_cp_path</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered when user taps "Become a Channel Partner". Shorter flow — captures name, number, current role. Routes to partnership team. Payout speed (79 minutes) is the hook.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">We'd love to have you in the Buloke network! 🤝
+
+Continuous pre-launch inventory · Payouts in 79 minutes · Full backend support.
+
+What's your name and what do you currently do?</div>
+        </div>
+        <div class="tcard-timing">After "Become a Channel Partner" · Free text reply · Routes to partnership team within 24 hrs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B9</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Shareholding Opportunity Path</div>
+          <div class="tcard-name">buloke_bot_shareholding</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered when user taps "Shareholding opportunity". Brief intro to Buloke's collective model — 400+ shareholders, early entry, Grade A projects. Captures name and routes to senior advisor.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Great choice to ask about this 🌳
+
+Buloke's shareholding model lets people participate in early-stage real estate collectively — pooling buying power to access projects before the public.
+
+We currently have 400+ shareholders who believe in <em>Collective Efforts, Consistent Growth</em>.
+
+Our senior advisor will walk you through how it works. What's your name?</div>
+        </div>
+        <div class="tcard-timing">After "Shareholding opportunity" · Routes to senior advisor</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B10</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Commercial / Office Space Path</div>
+          <div class="tcard-name">buloke_bot_commercial</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered by "Business / office space". Covers The Circuit (premium coworking across Bangalore — multiple locations) and Buloke's commercial portfolio. Captures name + requirement type.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">We have two options that may suit you 🏢
+
+<strong>The Circuit</strong> — premium executive coworking spaces across Bangalore. Multiple locations citywide, fully managed, ideal for teams who want to focus on growth, not office setup. 👉 thecircuit.work
+
+<strong>Commercial portfolio</strong> — enterprise-grade assets, managed office solutions, and corporate leasing across Bangalore.
+
+Which fits your need better?</div>
+          <div class="qr-row">
+            <div class="qr">🖥️ Flexi workspace (The Circuit)</div>
+            <div class="qr">🏗️ Buy / lease commercial</div>
+          </div>
+        </div>
+        <div class="tcard-timing">After "Business / office space"</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">B11</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Other / Just Browsing Path</div>
+          <div class="tcard-name">buloke_bot_other</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Triggered when user taps "Other / Just browsing". Low-pressure response — doesn't push. Gives them a quick overview of what Buloke does, and offers soft entry points so they can self-select when ready. Ends with a human handoff option if they want one.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">No problem — happy you're here! 🌳
+
+Buloke Realty helps people access early-stage projects in Bangalore — homes, plots, commercial spaces and farmland — before they go live on public portals.
+
+Here's what you can do:
+🏠 Browse our current projects
+📞 Speak to an advisor
+🤝 Learn about our CP network
+🌐 Visit buloke.com anytime
+
+Anything catch your eye?</div>
+          <div class="qr-row">
+            <div class="qr">🏠 Show me projects</div>
+            <div class="qr">📞 Talk to someone</div>
+            <div class="qr">🌐 Visit buloke.com</div>
+          </div>
+        </div>
+        <div class="tcard-timing">After "Other / Just browsing" · Soft re-entry into main flow or human handoff</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Fallback rules</div><div class="stage-div-line"></div></div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">BF1</div>
+        <span class="badge badge-bot">Bot</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Free text fallback</div>
+          <div class="tcard-name">buloke_bot_fallback</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">User types free text at any point outside expected flow. Bot acknowledges and offers a human handoff immediately.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">Thanks for the message! Our team will pick this up shortly — or call us now on <strong>+91 63649 22990</strong> for an immediate response.</div>
+        </div>
+        <div class="tcard-timing">Any unrecognised input</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">BF2</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Opt-out handling</div>
+          <div class="tcard-name">buloke_bot_optout</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">User sends STOP, DND, or Unsubscribe at any point. All queued messages halt. CRM status → Opted Out. No further sends ever.</div>
+        <div class="wa-preview">
+          <div class="wa-bubble">You've been unsubscribed. We won't send you any further messages. — Team Buloke</div>
+        </div>
+        <div class="tcard-privacy">🔒 CRM: status = "Opted Out" · timestamp logged</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-end" style="margin-top:16px">
+    Bot handoff complete → lead enters <strong>CRM Pipeline</strong> (Stage: New) · Rep assigned within 30 mins · Rep intro message fires (W3 / C2) · Bot goes silent — rep takes over all conversation from this point
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     TAB 1 — WEBSITE ENQUIRY
+══════════════════════════════════════════════════ -->
+<div id="enquiry" class="section">
+  <div class="flow-heading"><h2>Website Enquiry Flow</h2></div>
+  <div class="flow-meta">Triggered by form submission on buloke.com · 7-day drip sequence · 6 templates total: 1 Utility + 1 Internal + 4 Marketing</div>
+
+  <div class="trigger-block">
+    <div class="trigger-label">Trigger</div>
+    <div class="trigger-title">Lead submits enquiry form on buloke.com</div>
+    <div class="trigger-desc">Name, phone, project interest captured → CRM entry auto-created</div>
+    <div class="trigger-note">✅ WhatsApp opt-in checkbox required on form — timestamp logged in CRM for Meta compliance</div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Immediate — both fire simultaneously on form submit</div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Lead</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">W1</div>
+          <span class="badge badge-utility">Utility</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Lead confirmation</div>
+            <div class="tcard-name">buloke_lead_confirm</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Acknowledges enquiry received. Promises team contact within 24 hrs. Shares buloke.com to explore meanwhile. Signed off by Team Buloke, Hebbal HQ.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span> 👋
+
+Thanks for reaching out to Buloke Realty!
+
+We've received your enquiry and our team will get in touch with you within 24 hours.
+
+Meanwhile, explore all our current projects at buloke.com 🌐
+
+— Team Buloke, Hebbal HQ 🌳</div>
+          <div class="vars-line">Vars: {{1}} Name</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Team</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">W2</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">New web lead alert</div>
+            <div class="tcard-name">int_new_web_lead</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Alert fires to team. First name + project only. No phone number transmitted over WhatsApp. Full details in CRM.</div>
+          <div class="template-text">🔔 <strong>New website lead</strong>
+
+<span class="var">{{1}}</span> is interested in <span class="var">{{2}}</span>.
+
+Open CRM to assign &amp; action within 30 mins.
+👉 Full details + phone number in CRM only.</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project · phone stays in CRM</div>
+          <div class="tcard-privacy">🔒 First name + project only · phone stays in CRM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Same day — rep personally reaches out</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">W3</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Rep intro + call invite</div>
+          <div class="tcard-name">buloke_intro_rep</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Rep introduces themselves by name. References the specific project the lead enquired about. Asks for a 10-min call using quick-reply time slots.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+I'm <span class="var">{{2}}</span>, your dedicated advisor at Buloke Realty.
+
+I saw you were interested in <span class="var">{{3}}</span> — great choice! I'd love to share some details that aren't available on any portal, including our early-access inventory.
+
+Can we connect for a quick 10-minute call?</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Morning (9–12)</div>
+          <div class="qr">Afternoon (12–4)</div>
+          <div class="qr">Evening (4–7)</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Lead name · {{2}} Rep name · {{3}} Project interest</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">No reply by Day 2 → auto-fires</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">W4</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Follow-up — pre-launch angle</div>
+          <div class="tcard-name">buloke_followup_d2</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Soft check-in. Highlights Buloke's core edge: entering projects before public launch = better access + inventory not listed on MagicBricks or 99acres.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Just following up on your enquiry — wanted to make sure you didn't miss this.
+
+Buloke enters projects during pre-launch, which means we have inventory and pricing that <strong>isn't listed on MagicBricks, 99acres, or any portal</strong>.
+
+By the time a project goes public, the best units are already gone.
+
+Want me to send across the details?</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Yes, send details</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">No reply by Day 4 → auto-fires</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">W5</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Value drop — early entry</div>
+          <div class="tcard-name">buloke_value_drop</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Educates on the value: early entry in Bangalore RE consistently gives stronger positioning vs public launch. Bulk acquisition amplifies that advantage further.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Here's something worth knowing about Bangalore real estate:
+
+Early entry in a project — before RERA listing goes live — consistently gives buyers better unit selection, lower base price, and more negotiating room.
+
+Buloke goes further by acquiring in bulk during pre-launch, which amplifies that advantage for our members.
+
+Worth a 10-minute conversation?</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Show me</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">No reply by Day 7 → final message</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">W6</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Final nudge — graceful sign-off</div>
+          <div class="tcard-name">buloke_final_nudge_web</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Last message from rep. Low-pressure close. Explicitly validates even 2027+ buyers — frames early conversation as zero-cost, potentially saves lakhs. Personally signed by rep. No follow-up after this.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Last message from my end — I promise 🙏
+
+Even if you're planning to buy in 2026 or 2027, an early conversation with Buloke costs nothing and could save you lakhs when the right project opens up.
+
+No pressure, no spam. Just here whenever the time is right.
+
+— <span class="var">{{2}}</span>, Buloke Advisor
+📞 Reach me anytime at +91 63649 22990</div>
+        <div class="vars-line">Vars: {{1}} Lead name · {{2}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-end">
+    Responded at any point → moves to CRM Pipeline (Stage: Followup) · No response after Day 7 → lead marked Lost in CRM · <strong>Lead replies STOP/DND → all queued messages halted immediately, CRM status set to "Opted Out", no further sends ever</strong>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     TAB 2 — CRM PIPELINE
+══════════════════════════════════════════════════ -->
+<div id="crm" class="section">
+  <div class="flow-heading"><h2>CRM Pipeline Flow</h2></div>
+  <div class="flow-meta">Full stage coverage: New → Followup → Site Visit → Proposal → Negotiation → Booked / Lost · 19 templates · Triggered by CRM stage changes or time-based inactivity rules</div>
+
+  <div class="trigger-block">
+    <div class="trigger-label">Entry Point</div>
+    <div class="trigger-title">Lead enters CRM from any source</div>
+    <div class="trigger-desc">Website form · Meta CTWA ad · Channel partner referral · Direct walk-in at Hebbal HQ · WhatsApp Bot handoff</div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Stage: NEW — Lead Assigned</div><div class="stage-div-line"></div></div>
+  <div class="flow-meta" style="margin-bottom:12px">On CRM assignment — fires simultaneously to rep and lead</div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Rep</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C1</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Lead assigned alert</div>
+            <div class="tcard-name">int_lead_assigned</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Alert to rep. First name + project only. No phone number in the message. Rep dials directly from CRM. Hard SLA: contact within 30 mins, log the call.</div>
+          <div class="template-text">🔔 <strong>Lead assigned</strong>
+
+<span class="var">{{1}}</span> is interested in <span class="var">{{2}}</span>.
+
+Open CRM to contact within 30 mins.
+⚠️ SLA: call + log within 30 mins of this alert.</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project · phone in CRM only</div>
+          <div class="tcard-privacy">🔒 First name + project only · phone in CRM</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Lead</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C2</div>
+          <span class="badge badge-utility">Utility</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Welcome + named advisor</div>
+            <div class="tcard-name">buloke_welcome_utility</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Tells lead who their advisor is by name and gives their phone number. Sets expectation of contact shortly. Offers WhatsApp for any immediate queries.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span> 👋
+
+Welcome to Buloke Realty!
+
+Your dedicated advisor is <strong><span class="var">{{2}}</span></strong> and they'll be reaching out shortly.
+
+You can also reach them directly at 📞 <span class="var">{{3}}</span> — or just reply here on WhatsApp anytime.
+
+— Team Buloke, Hebbal HQ 🌳</div>
+          <div class="vars-line">Vars: {{1}} Lead name · {{2}} Rep name · {{3}} Rep phone</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Stage: NEW — Safety Net</div><div class="stage-div-line"></div></div>
+  <div class="flow-meta" style="margin-bottom:12px">30 mins after C1 — if rep has NOT logged any CRM activity</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C1b</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Rep escalation — no action taken</div>
+          <div class="tcard-name">int_rep_escalation</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Fires to manager if rep has not logged any CRM action 30 mins after C1 alert. Stops leads from falling through the cracks silently.</div>
+        <div class="template-text">⚠️ <strong>Escalation — no action taken</strong>
+
+<span class="var">{{1}}</span> has not actioned lead <span class="var">{{2}}</span> / <span class="var">{{3}}</span>.
+30 mins elapsed since assignment.
+
+Please intervene now — open CRM.</div>
+        <div class="vars-line">Vars: {{1}} Rep name · {{2}} Lead first name · {{3}} Project</div>
+        <div class="tcard-privacy">🔒 Rep name + lead first name + project only</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Stage: FOLLOWUP — Post-Call Nurture</div><div class="stage-div-line"></div></div>
+  <div class="flow-meta" style="margin-bottom:12px">After rep's first call is logged in CRM</div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C3</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Post-call summary</div>
+          <div class="tcard-name">buloke_post_call_summary</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Structured recap of call sent to lead: project discussed, budget aligned, timeline, agreed next step. Builds trust, confirms understanding. Signals project deck is coming next.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Great speaking with you just now! Here's a quick recap of our call:
+
+🏠 Project: <span class="var">{{2}}</span>
+💰 Budget aligned: <span class="var">{{3}}</span>
+📅 Timeline: <span class="var">{{4}}</span>
+✅ Next step: <span class="var">{{5}}</span>
+
+I'll send across the project details shortly. Feel free to reply here with any questions in the meantime.
+
+— <span class="var">{{6}}</span>, Buloke</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Budget · {{4}} Timeline · {{5}} Next step · {{6}} Rep name</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C4</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Project deck sent</div>
+          <div class="tcard-name">buloke_deck_sent</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Delivers brochure link with structured project info: name, brochure URL, location pin, construction status. Invites questions. No pricing referenced — keeps it Utility-compliant.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Here's the project deck for <strong><span class="var">{{2}}</span></strong> as promised 📋
+
+📍 Location: <span class="var">{{3}}</span>
+🏗️ Status: <span class="var">{{4}}</span>
+🔗 Brochure: <span class="var">{{5}}</span>
+📌 Map: <span class="var">{{6}}</span>
+
+Have a look and let me know if you have any questions — happy to walk you through it on a call.
+
+— <span class="var">{{7}}</span>, Buloke</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Location · {{4}} Status · {{5}} Brochure URL · {{6}} Map pin · {{7}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">48 hrs after deck — no action from lead → both fire</div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Lead</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C5</div>
+          <span class="badge badge-marketing">Marketing</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Deck follow-up nudge</div>
+            <div class="tcard-name">buloke_deck_followup</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Checks if deck was reviewed. Reinforces that Buloke's bulk inventory gives access not available on any portal. Offers site visit or Q&A.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Just checking — did you get a chance to look at the <span class="var">{{2}}</span> deck?
+
+One thing worth knowing: Buloke's bulk inventory on this project gives access to units and options that <strong>aren't available on any portal or direct channel</strong>.
+
+If you'd like to see the site in person, I can arrange a visit at a time that suits you.
+
+Or happy to answer any questions right here 👇</div>
+          <div class="qr-row" style="margin-top:8px">
+            <div class="qr">Schedule Visit</div>
+            <div class="qr">Ask a question</div>
+          </div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Project</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Rep</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C6</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Inactivity reminder</div>
+            <div class="tcard-name">int_followup_reminder</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Auto-alert to rep. Hard instruction: call / WhatsApp / email today. Manager is CC'd if still no action after 4 hrs.</div>
+          <div class="template-text">🔔 <strong>Inactivity alert</strong>
+
+No activity for 2+ days:
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+
+Open CRM and action today.
+Call / WhatsApp / email — no excuses.
+⚠️ Manager CC'd if no action in 4 hrs.</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project</div>
+          <div class="tcard-privacy">🔒 First name + project only · phone in CRM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Stage: SITE VISIT — Visit Booked</div><div class="stage-div-line"></div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C7</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Visit confirmation</div>
+          <div class="tcard-name">buloke_visit_confirm</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Full confirmed visit details: date, time, project name, exact site address. Confirms team will receive lead on-site. Offers WhatsApp reply for directions or rescheduling.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span> ✅
+
+Your site visit is confirmed!
+
+🏠 Project: <strong><span class="var">{{2}}</span></strong>
+📅 Date: <span class="var">{{3}}</span>
+⏰ Time: <span class="var">{{4}}</span>
+📍 Address: <span class="var">{{5}}</span>
+
+Our team will be there to receive you.
+
+Reply here if you need directions or need to reschedule — we're happy to adjust!
+
+— <span class="var">{{6}}</span>, Buloke 🌳</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Date · {{4}} Time · {{5}} Address · {{6}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Day before visit — both fire at 10am</div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Lead</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C8</div>
+          <span class="badge badge-utility">Utility</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Day-before reminder</div>
+            <div class="tcard-name">buloke_visit_reminder</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Reminds of visit tomorrow: project, time, location. Asks to carry valid ID. Reschedule option via reply — reduces no-shows without pressure.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Just a reminder — your site visit for <strong><span class="var">{{2}}</span></strong> is tomorrow!
+
+⏰ Time: <span class="var">{{3}}</span>
+📍 Location: <span class="var">{{4}}</span>
+👤 Your advisor: <span class="var">{{5}}</span>
+
+Please carry a valid photo ID.
+
+Need to reschedule? Just reply here and we'll sort it out.
+
+See you tomorrow! 👋</div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Time · {{4}} Location · {{5}} Rep name</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Team</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C9</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Site team prep alert</div>
+            <div class="tcard-name">int_site_visit_alert</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Alert to site team. Action: ensure unit is ready for viewing.</div>
+          <div class="template-text">🔔 <strong>Site visit scheduled</strong>
+
+<span class="var">{{1}}</span> visiting <span class="var">{{2}}</span>
+📅 <span class="var">{{3}}</span> at <span class="var">{{4}}</span>
+Rep: <span class="var">{{5}}</span>
+
+Open CRM for full details.
+✅ Ensure unit is ready for viewing.</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project · {{3}} Date · {{4}} Time · {{5}} Rep name</div>
+          <div class="tcard-privacy">🔒 First name + project + date only · phone in CRM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">2 hours after visit completion</div></div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C10</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Post-visit sentiment check</div>
+          <div class="tcard-name">buloke_post_visit</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Quick-reply buttons capture lead sentiment while it's fresh. Rep uses response to route next action in CRM.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Hope you enjoyed your visit to <strong><span class="var">{{2}}</span></strong> today! 🏠
+
+What was your initial reaction?</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">❤️ Loved it</div>
+          <div class="qr">🤔 Need more info</div>
+          <div class="qr">⚖️ Comparing options</div>
+          <div class="qr">👎 Not for me</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C10b</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Site visit no-show recovery</div>
+          <div class="tcard-name">buloke_visit_noshow</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent if visit completion not logged by rep within 3 hrs. Zero guilt. Offers easy rebook.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+We had a site visit scheduled today for <strong><span class="var">{{2}}</span></strong> — hope everything's okay on your end!
+
+No worries at all — happy to rebook at a time that works better for you 😊</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Rebook Visit</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Stage: PROPOSAL — Quote Sent</div><div class="stage-div-line"></div></div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C11</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Quotation sent</div>
+          <div class="tcard-name">buloke_quote_sent</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Custom quote delivery: unit number/type, total cost, payment plan structure, quote validity date. Framed as exclusive Buloke pricing — not available on any portal or direct.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Here's your exclusive Buloke quote for <strong><span class="var">{{2}}</span></strong> 📋
+
+🏠 Unit: <span class="var">{{3}}</span>
+💰 Total: ₹<span class="var">{{4}}</span>
+📋 Payment plan: <span class="var">{{5}}</span>
+⏳ Quote valid until: <span class="var">{{6}}</span>
+
+This pricing is exclusive to Buloke members — not available on any portal or through direct purchase.
+
+Any questions? I'm here to help 👇
+
+— <span class="var">{{7}}</span>, Buloke</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Unit · {{4}} Amount · {{5}} Plan · {{6}} Validity date · {{7}} Rep name</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C11b</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Quote expiry reminder</div>
+          <div class="tcard-name">buloke_quote_expiry</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Transactional reminder 48 hrs before quote expires. No hard sell — purely informational. Utility-compliant.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Just a heads up — your Buloke quote for <strong><span class="var">{{2}}</span></strong> is valid for 2 more days (until <span class="var">{{3}}</span>).
+
+After this date, pricing may change based on project availability.
+
+If you have any questions before then, reach me directly:
+— <span class="var">{{4}}</span>, Buloke</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Expiry date · {{4}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Stage: NEGOTIATION — Objection Handling</div><div class="stage-div-line"></div></div>
+  <div class="flow-meta" style="margin-bottom:12px">Fires based on objection type logged by rep in CRM</div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C12</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Price objection response</div>
+          <div class="tcard-name">buloke_objection_price</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Validates the concern. Explains Buloke's reserved bulk block will close — next pricing band will be higher. Pivots from price to payment structure.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Completely understand — it's a significant decision and price matters.
+
+Here's some context worth knowing: Buloke has a reserved bulk block in <span class="var">{{2}}</span> at this price point. Once this allocation closes, the next pricing band will be higher — that's just how developer tranches work.
+
+The good news is that the payment structure is designed to be manageable — it's not all upfront.
+
+Would it help to talk through the payment plan in detail?</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Yes, let's talk</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C13</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Comparison objection response</div>
+          <div class="tcard-name">buloke_objection_compare</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Validates comparison-shopping as fair. Lists 3 Buloke advantages over portals. Offers side-by-side comparison.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Comparing options is smart — please do.
+
+Here's what makes Buloke different from buying direct or through a portal:
+
+✅ Bulk entry access — units not listed anywhere else
+✅ Pre-launch availability — before the general public
+✅ End-to-end support — home loan, legal, and Vastu guidance included
+
+Happy to do a side-by-side comparison with whatever else you're looking at.
+
+Share what you're comparing and I'll lay it out for you.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Share my comparison</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C14</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Hot lead escalation alert</div>
+          <div class="tcard-name">int_hot_lead_alert</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Alert to management when lead has visited site AND reviewed quote — high-intent signal. Clear instruction: escalate to senior advisor, close within 48 hrs.</div>
+        <div class="template-text">🔥 <strong>Hot lead — immediate action needed</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+Budget: <span class="var">{{3}}</span>
+
+Has visited site + reviewed quote.
+Open CRM immediately.
+⚠️ Escalate to senior advisor — close within 48 hrs.</div>
+        <div class="vars-line">Vars: {{1}} First name · {{2}} Project · {{3}} Budget band</div>
+        <div class="tcard-privacy">🔒 First name + project + budget band only</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Stage: BOOKED — Unit Confirmed ✅</div><div class="stage-div-line"></div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Client</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C15</div>
+          <span class="badge badge-utility">Utility</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Booking confirmation 🎉</div>
+            <div class="tcard-name">buloke_booking_confirm</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Celebrates the booking with full details. Welcomes client to the Buloke community. Flags that agreement docs process begins next.</div>
+          <div class="template-text">🎉 Congratulations, <span class="var">{{1}}</span>!
+
+Your booking is confirmed — welcome to the Buloke community! 🌳
+
+🏠 Project: <strong><span class="var">{{2}}</span></strong>
+🔑 Unit: <span class="var">{{3}}</span>
+📅 Booking date: <span class="var">{{4}}</span>
+💰 Amount paid: ₹<span class="var">{{5}}</span>
+
+Our team will now begin the agreement documentation process. Your advisor will be in touch with next steps shortly.
+
+Thank you for choosing Buloke — we're thrilled to be part of this journey with you! 🏡</div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Unit · {{4}} Date · {{5}} Amount</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Team</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C16</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Booking confirmed alert</div>
+            <div class="tcard-name">int_booking_alert</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Alert to team. Action items in CRM: initiate agreement docs, connect to loan team, schedule Vastu consultation.</div>
+          <div class="template-text">🎉 <strong>Booking confirmed!</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+Closed by: <span class="var">{{3}}</span>
+
+Open CRM for full deal record.
+Action items:
+✅ Initiate agreement docs
+✅ Connect to loan team
+✅ Schedule Vastu consultation</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project · {{3}} Rep name · deal value in CRM</div>
+          <div class="tcard-privacy">🔒 First name + project + rep only · deal value in CRM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C17</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Post-booking onboarding</div>
+          <div class="tcard-name">buloke_post_booking_value</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sets expectations for the post-booking journey: legal documentation, home loan facilitation, ongoing construction update alerts. Names the advisor who will coordinate every step.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Here's what happens next with your Buloke journey 🗺️
+
+📄 Legal docs — our team will coordinate the sale agreement and registration process
+🏦 Home loan — if needed, we'll connect you with our banking partners for the best rates
+🏗️ Construction updates — you'll receive monthly progress updates right here on WhatsApp
+📞 Your point of contact for everything: <strong><span class="var">{{2}}</span></strong>
+
+You're in good hands. Reach out anytime — we're here 🌳</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Rep name</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">C17b</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Monthly construction update</div>
+          <div class="tcard-name">buloke_construction_update</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent to every booked client each month. Utility-compliant. Reduces buyer anxiety, drives referrals.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Here's your <span class="var">{{2}}</span> construction update for <strong><span class="var">{{3}}</span></strong> 🏗️
+
+✅ Latest milestone: <span class="var">{{4}}</span>
+
+Construction is on track and progressing as scheduled.
+
+Your advisor <span class="var">{{5}}</span> is available for any questions — just reply here anytime.
+
+— Team Buloke 🌳</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Month · {{3}} Project · {{4}} Milestone · {{5}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">OR — Lead marked Lost at any stage</div><div class="stage-div-line"></div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Team (Immediate)</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C19</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Lost reason log</div>
+            <div class="tcard-name">int_lost_reason_log</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Alert to rep. Instructions: log with reason tags within 1 hr. If timing/budget, set a 30-day re-engage task.</div>
+          <div class="template-text">🔔 <strong>Lead marked Lost</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+
+Open CRM → log reason within 1 hr.
+If reason = timing / budget: set 30-day re-engage task.
+If reason = competitor: flag for management review.</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project</div>
+          <div class="tcard-privacy">🔒 First name + project only · phone in CRM</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Lead (Day 30)</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">C18</div>
+          <span class="badge badge-marketing">Marketing</span>
+          <div class="tcard-right">
+            <div class="tcard-title">30-day re-engagement</div>
+            <div class="tcard-name">buloke_lost_reactivate</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Warm re-entry a month later. References new projects added across North, South, East Bangalore since last contact. Zero-pressure language.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span> 👋
+
+It's been a little while — hope you're doing well!
+
+We've added some new projects across North, South, and East Bangalore since we last spoke — a couple of them are at very early stages with great positioning still available.
+
+No pressure at all — just thought you might like a look if the timing is better now.</div>
+          <div class="qr-row" style="margin-top:8px">
+            <div class="qr">Explore New Projects</div>
+          </div>
+          <div class="vars-line">Vars: {{1}} Name</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-end">
+    Re-engaged → returns to CRM Pipeline at Followup stage · No response → remains Lost, periodic re-engagement cycles
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     TAB 3 — META ADS
+══════════════════════════════════════════════════ -->
+<div id="ads" class="section">
+  <div class="flow-heading"><h2>Project Meta Ads Flow</h2></div>
+  <div class="flow-meta">Click-to-WhatsApp (CTWA) ads on Facebook/Instagram · <strong>11 active projects</strong> · 72-hr free messaging window opens on first CTWA click · <strong>No prices ever mentioned in any template</strong></div>
+
+  <div class="note note-amber">All CTWA templates are <strong>Marketing category</strong>. The 72-hr free messaging window opens on first click — use this window for the rep intro (W3/C2 equivalent). After 72 hrs, only approved templates can be sent.</div>
+
+  <div class="stage-div"><div class="stage-div-line"></div><div class="stage-div-label">Active Residential Projects</div><div class="stage-div-line"></div></div>
+
+  <table class="project-table">
+    <thead>
+      <tr><th>Project</th><th>Location</th><th>Template Code</th><th>Key Hook (no pricing)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="proj-name">Nambiar District 25</div><div style="font-size:11px;color:var(--text3)">By Nambiar Builders</div></td>
+        <td>Sarjapur Road, East Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_nambiar</span></td>
+        <td>100 acres · 80% open · 42-acre lake · 3 lakh sq.ft clubhouse · 4 units/floor · RERA approved · Possession Jan 2030</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">CKPC Winds of Change</div><div style="font-size:11px;color:var(--text3)">By CKPC</div></td>
+        <td>Yelahanka, North Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_ckpc</span></td>
+        <td>IGBC Gold · 438 units only · Vastu-compliant · Airport proximity · Eco-luxury · RERA approved · Possession Dec 2029</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Shriram Sapphire</div><div style="font-size:11px;color:var(--text3)">By Shriram Properties</div></td>
+        <td>Bommasandra, South Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_shriram_sapphire</span></td>
+        <td>2 &amp; 3 BHK · 70%+ open · Near Electronic City · Co-working spaces · Possession Dec 2027</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Shriram 107 Southeast</div><div style="font-size:11px;color:var(--text3)">By Shriram Properties</div></td>
+        <td>Attibele, South Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_shriram_107</span></td>
+        <td>Grade A developer · South Bangalore growth corridor · Near Electronic City &amp; Hosur Road</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Assetz The Secret Lake</div><div style="font-size:11px;color:var(--text3)">By Assetz Property Group</div></td>
+        <td>IVC Road, North Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_assetz_lake</span></td>
+        <td>Nature-facing · IVC Road corridor · Near Aerospace Park · Airport proximity · Appreciation potential</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Sobha Madison Heights</div><div style="font-size:11px;color:var(--text3)">By Sobha Limited</div></td>
+        <td>Hosur Road, South Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_sobha</span></td>
+        <td>New launch · Sobha's in-house construction quality · Hosur Road · Near Electronic City &amp; Whitefield</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Mahindra New Haven</div><div style="font-size:11px;color:var(--text3)">By Mahindra Lifespaces</div></td>
+        <td>Off Hosur Road, Singasandra</td>
+        <td><span class="proj-code">buloke_ctwa_mahindra</span></td>
+        <td>IGBC Green pre-certified · G+24 tower · 70%+ open · 2 min to Hosa Road Metro · Possession Dec 2029</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Primus Sangama</div><div style="font-size:11px;color:var(--text3)">By Primus</div></td>
+        <td>Mysore Road, Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_primus</span></td>
+        <td>New launch · Mysore Road corridor · West Bangalore growth zone · Early entry advantage</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Assetz Promise of Spring</div><div style="font-size:11px;color:var(--text3)">By Assetz Property Group</div></td>
+        <td>Devanahalli, North Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_assetz_spring</span></td>
+        <td>Plotted development · 23 acres · 251 plots · 5,000+ trees · 47% open · On NH-44 · Near airport · RERA approved · Possession Oct 2026</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Hosachiguru Unnati</div><div style="font-size:11px;color:var(--text3)">By Hosachiguru</div></td>
+        <td>Chikballapur, North Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_unnati</span></td>
+        <td>Farm-themed villa plots · 40+ acres · 50:50 villa + farm concept · 5,400–8,000 sq.ft plots · 45 min from airport · RERA approved · Possession 2027</td>
+      </tr>
+      <tr>
+        <td><div class="proj-name">Provident Ecopolitan</div><div style="font-size:11px;color:var(--text3)">By Provident Housing (Puravankara)</div></td>
+        <td>Aerospace Park, Bagalur, North Bangalore</td>
+        <td><span class="proj-code">buloke_ctwa_ecopolitan</span></td>
+        <td>Nature-first · 1/2/3 BHK · 80% open · 45+ indigenous species · 1 tree per family · IGBC certified · 10 min from airport · RERA approved · Possession Dec 2027</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="stage-div" style="margin-top:28px"><div class="stage-div-line"></div><div class="stage-div-label">CTWA Message Templates — one per project</div><div class="stage-div-line"></div></div>
+
+  <!-- AD1 — NAMBIAR DISTRICT 25 -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-A</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Nambiar District 25</div>
+          <div class="tcard-name">buloke_ctwa_nambiar</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Nambiar District 25</strong> — one of the most spacious township projects on Sarjapur Road right now.
+
+Here's what makes it worth seeing early:
+🌳 100 acres · 80% open space
+🏊 42-acre lake within the community
+🏟️ 3 lakh sq.ft world-class clubhouse
+🏠 Only 4 units per floor — privacy by design
+✅ RERA Approved · Possession Jan 2030
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-B — CKPC -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-B</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — CKPC Winds of Change</div>
+          <div class="tcard-name">buloke_ctwa_ckpc</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>CKPC Winds of Change</strong> — an eco-luxury community designed for people who value quality of life, not just square footage.
+
+Here's what makes it worth seeing early:
+🌿 IGBC Gold certified — one of very few in North Bangalore
+🔒 Only 438 residences — intentionally limited community
+🏠 1, 2, 2.5, 3 &amp; 4 BHK · Vastu-compliant layouts
+✈️ Airport proximity — Yelahanka, North Bangalore
+✅ RERA Approved · Possession Dec 2029
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-C — SHRIRAM SAPPHIRE -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-C</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Shriram Sapphire</div>
+          <div class="tcard-name">buloke_ctwa_shriram_sapphire</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Shriram Sapphire</strong> — a project by one of South India's most trusted developers, right in the heart of South Bangalore's IT corridor.
+
+Here's what makes it worth seeing early:
+🏠 Spacious 2 &amp; 3 BHK homes
+🌳 70%+ open green space
+💻 Co-working spaces within the community
+📍 Near Electronic City — ideal for tech professionals
+✅ RERA Approved · Possession Dec 2027
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-D — SHRIRAM 107 -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-D</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Shriram 107 Southeast</div>
+          <div class="tcard-name">buloke_ctwa_shriram_107</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Shriram 107 Southeast</strong> — ideally positioned for buyers looking at the South Bangalore growth corridor before it gets crowded.
+
+Here's what makes it worth seeing early:
+🏗️ Grade A developer — Shriram Properties
+📍 Attibele — South Bangalore's next growth zone
+🚀 Near Electronic City &amp; Hosur Road — major employment hub
+📈 Early entry in an appreciating corridor
+✅ RERA Approved
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-E — ASSETZ -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-E</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Assetz The Secret Lake</div>
+          <div class="tcard-name">buloke_ctwa_assetz_lake</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Assetz The Secret Lake</strong> — a nature-facing community on IVC Road, one of North Bangalore's fastest-appreciating corridors.
+
+Here's what makes it worth seeing early:
+🌊 Nature-facing — serene lake views
+📍 IVC Road, North Bangalore
+🛩️ Near Aerospace Park &amp; Airport corridor
+📈 Strong appreciation track record in this zone
+✅ RERA Approved
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-F — SOBHA -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-F</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Sobha Madison Heights</div>
+          <div class="tcard-name">buloke_ctwa_sobha</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Sobha Madison Heights</strong> — a brand new launch by Sobha Limited, built entirely in-house for unmatched quality.
+
+Here's what makes it worth seeing early:
+🏗️ Sobha's in-house construction — no contractor dependency
+📍 Hosur Road, South Bangalore — dual connectivity
+🚇 Near Electronic City &amp; Whitefield hubs
+🌟 New launch — early buyers get the best unit options
+✅ RERA Approved
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-G — MAHINDRA -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-G</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Mahindra New Haven</div>
+          <div class="tcard-name">buloke_ctwa_mahindra</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Mahindra New Haven</strong> — a premium high-rise community with a rare combination of green certification, metro access, and a Mahindra brand guarantee.
+
+Here's what makes it worth seeing early:
+🌿 IGBC Green pre-certified
+🏙️ G+24 tower · 70%+ open space
+🚇 2 minutes to Hosa Road Metro Station
+📍 Off Hosur Road, Singasandra
+✅ RERA Approved · Possession Dec 2029
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-H — PRIMUS -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-H</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Primus Sangama</div>
+          <div class="tcard-name">buloke_ctwa_primus</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Primus Sangama</strong> — a new launch on Mysore Road, one of West Bangalore's most active growth corridors right now.
+
+Here's what makes it worth seeing early:
+🌟 New launch — first movers get best selection
+📍 Mysore Road — West Bangalore's growth zone
+🚀 Rapidly developing infrastructure corridor
+📈 Strong early-entry appreciation potential
+✅ RERA Approved
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-I — ASSETZ PROMISE OF SPRING -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-I</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Assetz Promise of Spring</div>
+          <div class="tcard-name">buloke_ctwa_assetz_spring</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Assetz Promise of Spring</strong> — a rare luxury plotted development by Assetz Group, right on the Bangalore-Hyderabad Highway near Devanahalli.
+
+Here's what makes it worth seeing early:
+🌳 23 acres · 5,000+ trees · 47% open space
+🌿 Miyawaki forest gardens throughout the community
+🏡 Plots from 1,200 to 3,300 sq.ft — build your own home
+✈️ 20 minutes from Kempegowda International Airport
+✅ RERA Approved · Possession Oct 2026
+
+Buloke entered this project during pre-launch — we have plot options and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-J — HOSACHIGURU UNNATI -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-J</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Hosachiguru Unnati</div>
+          <div class="tcard-name">buloke_ctwa_unnati</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Hosachiguru Unnati</strong> — something genuinely different. India's first farm-themed villa plot community, near Chikballapur, North Bangalore.
+
+Here's what makes it unlike anything else:
+🌾 50:50 concept — build your villa on half, grow your own food on the other half
+🏡 Spacious plots from 5,400 to 8,000 sq.ft · Vastu-compliant
+🌿 Permaculture-designed · each plot comes pre-planted with ~15 trees
+🏊 25,000 sq.ft clubhouse · pool · sports courts · bonfire areas
+✈️ 45 minutes from Kempegowda International Airport · NH-44 connected
+✅ RERA Approved · Possession 2027
+
+Buloke entered this project early — we have plot options and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD1-K — PROVIDENT ECOPOLITAN -->
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">AD1-K</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">CTWA — Provident Ecopolitan</div>
+          <div class="tcard-name">buloke_ctwa_ecopolitan</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="template-text">Hi <span class="var">{{1}}</span>! 👋
+
+You clicked through about <strong>Provident Ecopolitan</strong> — a nature-first township by Provident Housing (Puravankara Group), at Aerospace Park in North Bangalore.
+
+Here's what makes it worth seeing early:
+🌿 Nature First certified · 45+ indigenous plant species
+🌳 1 tree for every family — minimum
+🏙️ 80%+ open space · 1, 2 &amp; 3 BHK apartments
+✈️ 10 minutes from Kempegowda International Airport
+🚇 Upcoming metro connectivity — Doddajala Station nearby
+✅ RERA Approved · Possession Dec 2027
+
+Buloke entered this project during pre-launch — we have inventory and access that isn't listed on any portal.
+
+Our advisor will reach out shortly, <span class="var">{{1}}</span>.</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Send project details</div>
+          <div class="qr">Book a site visit</div>
+          <div class="qr">Call me now</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} First name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-end">
+    Lead clicks CTWA → 72-hr free window opens → AD1 fires → Rep assigned in CRM → W3 (rep intro) fires within same day → lead moves into Website Enquiry or CRM Pipeline flow
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     TAB 4 — EVENTS / REALTY LOUNGE
+══════════════════════════════════════════════════ -->
+<div id="events" class="section">
+  <div class="flow-heading"><h2>Events / Realty Lounge Flow</h2></div>
+  <div class="flow-meta">The Realty Lounge — Bangalore's Real Estate Experience Centre at Buloke HQ, Hebbal · 4 templates: 3 Marketing + 1 Utility</div>
+
+  <div class="trigger-block">
+    <div class="trigger-label">Trigger</div>
+    <div class="trigger-title">Rep invites a lead to a Realty Lounge session</div>
+    <div class="trigger-desc">Manually triggered by rep · Typically sent 5–7 days ahead of event</div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">5–7 days before event</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">E1</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Event invitation</div>
+          <div class="tcard-name">buloke_event_invite</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Invites lead to The Realty Lounge: date, time, Hebbal HQ location. Pitches it as Bangalore's first Real Estate Experience Centre — meet advisors, compare projects, get expert guidance, all in one place.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span> 👋
+
+You're invited to <strong>The Realty Lounge</strong> — Bangalore's first Real Estate Experience Centre, at Buloke HQ, Hebbal.
+
+🗓️ Date: <span class="var">{{2}}</span>
+⏰ Time: <span class="var">{{3}}</span>
+📍 Buloke HQ, Hebbal, Bangalore
+
+What to expect:
+🏠 Explore multiple projects in one place — with physical models, floor plans, and live inventory
+🎯 Meet expert advisors who'll guide you based on your budget and goals
+⚖️ Compare projects side-by-side — no portal, no confusion
+☕ Complimentary refreshments · Relaxed, no-pressure environment
+
+This is not a sales event. It's a space to get clarity.
+
+Seats are limited — would you like to register?</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Register Now</div>
+          <div class="qr">Get Directions</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Date · {{3}} Time</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Day before event — 10am</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">E2</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Day-before reminder</div>
+          <div class="tcard-name">buloke_event_reminder</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Non-promotional reminder: session is tomorrow, date, time, Buloke HQ address confirmed. Option to reschedule via reply — keeps message Meta-compliant as Utility.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Just a reminder — your Realty Lounge session is <strong>tomorrow</strong>!
+
+🗓️ <span class="var">{{2}}</span>
+⏰ <span class="var">{{3}}</span>
+📍 Buloke HQ, Hebbal, Bangalore
+
+We look forward to seeing you.
+
+Need to reschedule? Just reply here and we'll find a better time.</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Date · {{3}} Time</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Day after event — outcome determines which fires</div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">Attended ✓</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">E3</div>
+          <span class="badge badge-marketing">Marketing</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Post-event follow-up</div>
+            <div class="tcard-name">buloke_post_event</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">References the specific project interest they showed during the session. Attaches relevant project details. Proposes an advisory call as the natural next step while interest is warm.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span>!
+
+Great to have you at The Realty Lounge yesterday 🙏
+
+I noticed you showed interest in <strong><span class="var">{{2}}</span></strong> — I've put together some additional details and current availability specifically for you.
+
+The interest we saw yesterday tells me this could be a strong fit. While the details are fresh, would you like to have a focused advisory call to go over the specifics — unit selection, payment structure, and what Buloke members get exclusively?</div>
+          <div class="qr-row" style="margin-top:8px">
+            <div class="qr">Yes, I'm interested</div>
+          </div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Project interest shown</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">Did Not Show ✗</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">E4</div>
+          <span class="badge badge-marketing">Marketing</span>
+          <div class="tcard-right">
+            <div class="tcard-title">No-show recovery</div>
+            <div class="tcard-name">buloke_event_noshow</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Soft recovery — acknowledges they missed yesterday without guilt-tripping. Pivots to a lower-commitment alternative: personalised 1:1 consultation at Hebbal office.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+We missed you at The Realty Lounge yesterday — hope everything's okay on your end!
+
+No worries at all. If life got in the way, I'm happy to set up a personalised 1:1 consultation right here at our Hebbal office — same experience, just tailored entirely to you and your requirements.
+
+No group setting, no pressure. Just clarity on the right project for you.</div>
+          <div class="qr-row" style="margin-top:8px">
+            <div class="qr">Book 1:1</div>
+          </div>
+          <div class="vars-line">Vars: {{1}} Name</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-end">
+    Engaged attendees → CRM Pipeline (Followup stage) · No-shows who book 1:1 → CRM Pipeline (Site Visit stage)
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     TAB 5 — INTERNAL OPS
+══════════════════════════════════════════════════ -->
+<div id="internal" class="section">
+  <div class="flow-heading"><h2>Internal Ops Alerts</h2></div>
+  <div class="flow-meta">6 automated alerts for management and team · All INTERNAL — zero client sends · Configured as CRM webhooks or scheduled jobs in BSP</div>
+
+  <div class="note note-purple">🔒 <strong>Data Policy — All Internal Alerts:</strong> First name + project only in WhatsApp alerts. This gives the team just enough context to recall and act — without transmitting phone numbers, last names, or financial details over WhatsApp. All full PII (phone, full name, deal value) lives exclusively in the CRM. This protects leads from exposure via forwarded messages or screenshots.</div>
+
+  <div class="stage-div" style="margin-top:24px"><div class="stage-div-line"></div><div class="stage-div-label">Real-time CRM Alerts</div><div class="stage-div-line"></div></div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">I1</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">int_daily_lead_summary</div>
+          <div class="tcard-name">Daily lead summary</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Morning dashboard for manager — aggregate counts only. No individual lead names or phones in this message.</div>
+        <div class="template-text">🔔 <strong>Daily Lead Summary — <span class="var">{{1}}</span></strong>
+
+📥 New leads today: <span class="var">{{2}}</span>
+📞 Followups due today: <span class="var">{{3}}</span> (Reps: <span class="var">{{4}}</span>)
+🏠 Site visits today: <span class="var">{{5}}</span>
+✅ Bookings closed: <span class="var">{{6}}</span>
+🔥 Hot leads — no action 48hrs+: <span class="var">{{7}}</span>
+
+Open CRM → review pipeline → EOD log by 7pm.
+No names or contacts in this message — full details in CRM.</div>
+        <div class="vars-line">Vars: {{1}} Date · {{2–7}} Counts · Rep names (aggregate only)</div>
+        <div class="tcard-timing">Daily at 9am → Manager</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">I2</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">int_uncontacted_alert</div>
+          <div class="tcard-name">Uncontacted lead alert</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Fires when a new lead has no call logged for 4+ hours. Rep dials from CRM. Manager is auto-copied if still no action after 1 more hour.</div>
+        <div class="template-text">⚠️ <strong>Uncontacted lead</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+Assigned to: <span class="var">{{3}}</span>
+⏱️ 4 hrs elapsed — no call logged.
+
+Call now. Open CRM for contact details.
+⚠️ Manager CC'd if still no action in 1 hr.</div>
+        <div class="vars-line">Vars: {{1}} First name · {{2}} Project · {{3}} Rep name</div>
+        <div class="tcard-timing">4 hrs after lead — no call logged</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">I3</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">int_cross_project_alert</div>
+          <div class="tcard-name">Cross-project opportunity</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Alert to rep: lead may be a better fit for a different project based on budget/timeline. Action: tag both projects in CRM before calling.</div>
+        <div class="template-text">🔄 <strong>Cross-project opportunity</strong>
+
+<span class="var">{{1}}</span> may be a better fit for <span class="var">{{2}}</span> based on budget / timeline.
+
+Currently tagged: <span class="var">{{3}}</span>
+
+Open CRM → tag both projects before calling.
+Discuss both options on your next call.</div>
+        <div class="vars-line">Vars: {{1}} First name · {{2}} Suggested project · {{3}} Current project</div>
+        <div class="tcard-timing">On budget vs project mismatch</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">I4</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">int_cp_deal_alert</div>
+          <div class="tcard-name">Channel partner deal alert</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Alert when a CP referral booking is confirmed. Action: verify CP documentation is complete in CRM, initiate commission tracking.</div>
+        <div class="template-text">🤝 <strong>CP booking confirmed</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+Via CP: <span class="var">{{3}}</span>
+
+Open CRM for deal record.
+✅ Verify CP documentation is complete
+✅ Initiate commission tracking</div>
+        <div class="vars-line">Vars: {{1}} First name · {{2}} Project · {{3}} CP name</div>
+        <div class="tcard-timing">On CP referral booking confirmed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">I5</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">int_inventory_low</div>
+          <div class="tcard-name">Inventory low alert</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Alert to sales head when units fall below threshold. Simultaneously, CRM auto-flags active pipeline leads on that project. No lead names in this message.</div>
+        <div class="template-text">⚠️ <strong>Low inventory alert</strong>
+
+Project: <span class="var">{{1}}</span>
+Units remaining: <span class="var">{{2}}</span>
+
+Auto-urgency sequence activated for <span class="var">{{3}}</span> pipeline leads on this project.
+
+Action: review active pipeline in CRM immediately and prioritise closures.</div>
+        <div class="vars-line">Vars: {{1}} Project · {{2}} Units remaining · {{3}} Pipeline lead count</div>
+        <div class="tcard-timing">When units &lt; configured threshold · To sales head</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">I6</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">int_weekly_report</div>
+          <div class="tcard-name">Weekly conversion report</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Full pipeline snapshot sent every Monday — aggregate numbers only. Highlights top-performing rep and flags who needs attention. No individual lead names or contacts.</div>
+        <div class="template-text">📊 <strong>Weekly Report — w/e <span class="var">{{1}}</span></strong>
+
+📥 New leads: <span class="var">{{2}}</span>
+📞 % contacted within 30 mins: <span class="var">{{3}}</span>%
+🏠 Site visits completed: <span class="var">{{4}}</span>
+📋 Proposals sent: <span class="var">{{5}}</span>
+✅ Bookings closed: <span class="var">{{6}}</span>
+📈 Overall conversion rate: <span class="var">{{7}}</span>%
+
+🏆 Top performer: <span class="var">{{8}}</span>
+⚠️ Needs attention: <span class="var">{{9}}</span>
+
+Full breakdown in CRM. No lead contacts in this message.</div>
+        <div class="vars-line">Vars: {{1}} Week end date · {{2–9}} Metrics + rep names (aggregate)</div>
+        <div class="tcard-timing">Every Monday at 8am → Management</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+<!-- ══════════════════════════════════════════════════
+     TAB 6 — POST-BOOKING JOURNEY
+══════════════════════════════════════════════════ -->
+<div id="postbooking" class="section">
+
+  <div class="flow-heading"><h2>Post-Booking Journey</h2></div>
+  <div class="flow-meta">
+    Covers every stage after a booking is confirmed — Quote approval (internal + customer), MOU signing, payment milestones, receipts, and construction handoff · <strong>16 templates</strong> · 6 Utility · 4 Marketing · 6 Internal · Zero templates mention raw financials in WhatsApp — full deal data stays in CRM
+  </div>
+
+  <div class="note note-amber">
+    <strong>Why this section exists:</strong> The existing CRM Pipeline (Tab 2) covers pre-booking stages. This section picks up the moment a booking is confirmed and tracks the customer through to possession — a journey that typically spans 2–4 years and has the highest referral potential if communicated well.
+  </div>
+
+  <div class="note note-purple">
+    🔒 <strong>Data Policy:</strong> Payment amounts, unit prices, legal doc details, and loan specifics are never sent over WhatsApp. Customers are directed to check their email / CRM portal for exact figures. WhatsApp is used for <em>signals and nudges only</em> — not as a document delivery channel for sensitive financial data.
+  </div>
+
+  <!-- ─── STAGE: INTERNAL APPROVAL ─── -->
+  <div class="stage-div" style="margin-top:28px">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Stage 1 — Internal Approval (Quote)</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">Triggered when SBA price ≠ Base price OR discount &gt; ₹50 · Fires to approver and rep simultaneously</div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Approver</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB1</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Quote approval request</div>
+            <div class="tcard-name">int_quote_approval_request</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Fires to the designated approver when a quote crosses the internal approval threshold. Approver can act from Salesforce or email — no financial details in WhatsApp. Approval reason tagged so manager has context.</div>
+          <div class="template-text">🔔 <strong>Quote approval needed</strong>
+
+Rep: <span class="var">{{1}}</span>
+Lead: <span class="var">{{2}}</span> / <span class="var">{{3}}</span>
+Reason: <span class="var">{{4}}</span>
+
+Open Salesforce or check email to approve / reject.
+⏱️ Please action within 2 hours — rep is with the client.</div>
+          <div class="vars-line">Vars: {{1}} Rep name · {{2}} Lead first name · {{3}} Project · {{4}} Reason tag (SBA mismatch / Discount &gt;₹50)</div>
+          <div class="tcard-privacy">🔒 No pricing in WhatsApp · full quote details in Salesforce / email</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Rep</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB1b</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Quote sent for approval — rep notice</div>
+            <div class="tcard-name">int_quote_approval_sent</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Tells rep the quote has been routed for approval so they can set the right expectation with the customer. Includes approver name so rep knows who to follow up with if delayed.</div>
+          <div class="template-text">🔔 <strong>Quote routed for approval</strong>
+
+<span class="var">{{2}}</span> / <span class="var">{{3}}</span>
+Approver: <span class="var">{{5}}</span>
+
+Quote is under review — do not share pricing with customer yet.
+Expected turnaround: 2 hours.
+If delayed, contact approver directly.</div>
+          <div class="vars-line">Vars: {{1}} Rep name · {{2}} Lead first name · {{3}} Project · {{4}} Reason · {{5}} Approver name</div>
+          <div class="tcard-privacy">🔒 No pricing in WhatsApp</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">Approved ✓</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB2</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Quote approved — rep alert</div>
+            <div class="tcard-name">int_quote_approved</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Instant alert to rep when quote is approved. Clear next action: share quote with customer now. Urgency framed — customer is warm, don't wait.</div>
+          <div class="template-text">✅ <strong>Quote approved</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+
+Share the quote with the customer now.
+Customer is waiting — do not delay.
+Open CRM → send quote PDF via WhatsApp or email.</div>
+          <div class="vars-line">Vars: {{1}} Lead first name · {{2}} Project</div>
+          <div class="tcard-privacy">🔒 No pricing in WhatsApp · send quote PDF directly to customer</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">Rejected ✗</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB2b</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Quote rejected — rep alert</div>
+            <div class="tcard-name">int_quote_rejected</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Fires to rep when quote is rejected internally. Includes rejection reason so rep can course-correct without going back to Salesforce. Action: revise and resubmit or call manager.</div>
+          <div class="template-text">❌ <strong>Quote rejected</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+Reason: <span class="var">{{3}}</span>
+
+Revise the quote in CRM and resubmit for approval.
+Do NOT inform the customer yet — speak to your manager first.</div>
+          <div class="vars-line">Vars: {{1}} Lead first name · {{2}} Project · {{3}} Rejection reason</div>
+          <div class="tcard-privacy">🔒 No pricing in WhatsApp</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STAGE: CUSTOMER APPROVAL ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Stage 2 — Customer Quote Approval</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">After internal approval · Quote PDF sent to customer via email + WhatsApp notification</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB3</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Quote shared — customer notification</div>
+          <div class="tcard-name">buloke_quote_shared</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Tells customer their personalised quote is ready and has been sent to their email. Directs them to email for the document — WhatsApp is used only as a signal. Gives advisor contact for questions. No price figures in the message itself.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Your personalised quote for <strong><span class="var">{{2}}</span></strong> is ready! 📋
+
+We've sent the detailed cost sheet to your registered email — please check your inbox (and spam folder if needed).
+
+Have questions about the pricing or payment structure? Just reply here or call your advisor directly:
+— <span class="var">{{3}}</span> · 📞 <span class="var">{{4}}</span>
+
+We're here to walk you through every line. 🌳</div>
+        <div class="vars-line">Vars: {{1}} Customer name · {{2}} Project · {{3}} Rep name · {{4}} Rep phone</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">24 hrs — no response from customer</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB4</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Quote follow-up — approval nudge</div>
+          <div class="tcard-name">buloke_quote_approval_nudge</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Gentle reminder if customer hasn't responded to the quote in 24 hrs. Reinforces quote expiry and availability — not pressure, just clarity. Keeps the door open to questions or renegotiation.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Just checking in on the quote we sent for <strong><span class="var">{{2}}</span></strong> — did you get a chance to review it?
+
+A few things worth keeping in mind:
+⏳ The quote is valid until <span class="var">{{3}}</span>
+🔒 The unit is reserved for you until then
+📋 Payment structure is flexible — happy to explain options
+
+If you have any questions or want to talk through the numbers, I'm right here.
+
+— <span class="var">{{4}}</span>, Buloke</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">I'm ready to proceed</div>
+          <div class="qr">I have questions</div>
+          <div class="qr">Need more time</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Expiry date · {{4}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">Customer approves ✓</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB5</div>
+          <span class="badge badge-utility">Utility</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Quote accepted — next step</div>
+            <div class="tcard-name">buloke_quote_accepted</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Acknowledgement sent instantly when customer approves. Confirms booking process is now starting. Sets expectation for the next communication — booking confirmation and initial payment instructions via email.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span> 🎉
+
+Thank you for confirming — we're now moving forward with your booking for <strong><span class="var">{{2}}</span></strong>!
+
+Here's what happens next:
+📧 Booking confirmation + payment details → sent to your email
+📞 Your advisor <span class="var">{{3}}</span> will call you within a few hours
+📋 Please keep your KYC documents ready
+
+You're one step closer to your new home. 🏡
+
+— Team Buloke, Hebbal HQ 🌳</div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Rep name</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">Customer rejects ✗</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB5b</div>
+          <span class="badge badge-marketing">Marketing</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Quote rejected — save the deal</div>
+            <div class="tcard-name">buloke_quote_rejected_save</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Sent when customer declines. Low-pressure, non-defensive tone. Opens the door to understanding the objection — price, payment, or wrong unit. Routes back to rep for a real conversation rather than closing the lead.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Completely understood — it's a big decision and the numbers have to feel right.
+
+Can I ask what's holding you back? Knowing that helps me check if there's a better option or structure we haven't shown you yet.
+
+It might be pricing, payment timing, or even a different unit — I'd rather find the right fit than lose you over something fixable.
+
+— <span class="var">{{2}}</span>, Buloke</div>
+          <div class="qr-row" style="margin-top:8px">
+            <div class="qr">Price is too high</div>
+            <div class="qr">Payment structure</div>
+            <div class="qr">Need more time</div>
+            <div class="qr">Looking at other options</div>
+          </div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Rep name</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STAGE: BOOKING + INITIAL PAYMENT ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Stage 3 — Booking Created + Initial Payment (10%)</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">After customer approves quote · Booking record created in Salesforce · 10% payment required to unlock MOU</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB6</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Initial payment reminder — 10%</div>
+          <div class="tcard-name">buloke_initial_payment_reminder</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent after booking creation to prompt the 10% initial payment. Payment amount and instructions are in the email — not in this message. WhatsApp is the nudge; email is the instruction. Keeps the message Meta Utility-compliant by being purely transactional.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Your booking for <strong><span class="var">{{2}}</span></strong> has been created! ✅
+
+To move to the next step, your initial payment is required.
+
+📧 Full payment details and bank instructions have been sent to your registered email.
+📞 If you have any questions, reach your advisor: <span class="var">{{3}}</span> · <span class="var">{{4}}</span>
+
+Once the payment is received, we'll begin the MOU process. 🌳</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Rep name · {{4}} Rep phone</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">48 hrs — payment not yet received</div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Customer</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB7</div>
+          <span class="badge badge-utility">Utility</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Payment pending follow-up</div>
+            <div class="tcard-name">buloke_payment_pending</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">If initial payment not received in 48 hrs — gentle check-in. Not a chaser. Asks if there's a specific issue (bank transfer, UPI, etc.) and offers to help. Urgency: unit is reserved but not locked until payment clears.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Just checking in — we're still waiting for the initial payment for your booking on <strong><span class="var">{{2}}</span></strong>.
+
+Your unit is reserved, but it'll only be fully secured once the payment is processed.
+
+Is there anything we can help with — bank details, transfer issues, or a quick question?
+
+Reply here or call <span class="var">{{3}}</span> directly — we'll sort it out quickly. 🙏</div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Rep name</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Rep (Internal)</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB7b</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">Payment delay alert</div>
+            <div class="tcard-name">int_payment_delay_alert</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Alert to rep when initial payment hasn't arrived 48 hrs after booking. Rep must call, not just WhatsApp. Flags risk of deal slipping — manager is copied if no action in 4 hrs.</div>
+          <div class="template-text">⚠️ <strong>Payment not received — 48 hrs</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+
+Initial payment still pending.
+Call the customer now — do not just WhatsApp.
+⏱️ Manager CC'd if no action logged in 4 hrs.</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project</div>
+          <div class="tcard-privacy">🔒 First name + project only · payment details in CRM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">Payment received → MOU process begins</div></div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB8</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Payment received + receipt confirmation</div>
+          <div class="tcard-name">buloke_payment_received</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent immediately when initial payment is confirmed in Salesforce. Reassures customer, provides receipt reference. Tells them what's next: MOU preparation begins. Receipt PDF is in email — not in WhatsApp.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span> ✅
+
+We've received your initial payment for <strong><span class="var">{{2}}</span></strong> — thank you!
+
+🧾 Receipt reference: <span class="var">{{3}}</span>
+📧 Your official receipt has been sent to your registered email.
+
+What happens next:
+📄 We'll begin preparing your MOU (Memorandum of Understanding)
+📞 Your advisor <span class="var">{{4}}</span> will be in touch with details
+
+You're officially in the process. 🌳 — Team Buloke</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Receipt reference no. · {{4}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STAGE: MOU ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Stage 4 — MOU (Memorandum of Understanding)</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">Triggered after initial 10% payment is confirmed · Legal team coordinates · Customer + Builder sign</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB9</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">MOU ready for signing</div>
+          <div class="tcard-name">buloke_mou_ready</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Notifies customer that MOU is prepared and ready. Document sent to email. Tells them what to expect: review carefully, sign, return. Lists what they need for signing (ID proof etc.). No legal text in WhatsApp — purely a routing message.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Your MOU (Memorandum of Understanding) for <strong><span class="var">{{2}}</span></strong> is ready! 📄
+
+📧 The document has been sent to your registered email — please review it carefully.
+
+When reviewing, check:
+✅ Your name and contact details
+✅ Unit / floor / block details
+✅ Payment schedule
+✅ Possession date
+
+Once you're happy, sign and return as instructed in the email.
+
+Questions? Reach your advisor <span class="var">{{3}}</span> anytime. 🙏</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-label">MOU signed by customer → uploaded to Salesforce</div></div>
+
+  <div class="template-row">
+    <div>
+      <div class="direction">To Customer</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB10</div>
+          <span class="badge badge-utility">Utility</span>
+          <div class="tcard-right">
+            <div class="tcard-title">MOU signed — booking journey starts</div>
+            <div class="tcard-name">buloke_mou_confirmed</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Confirmation that signed MOU has been received and uploaded. Marks the official start of the booking journey. Sets expectations for what comes next — payment schedule and construction updates. Warm, celebratory tone.</div>
+          <div class="template-text">Hi <span class="var">{{1}}</span> 🎉
+
+Your signed MOU for <strong><span class="var">{{2}}</span></strong> has been received and recorded — you're now officially part of the Buloke family! 🌳
+
+Here's what to expect going forward:
+📅 Payment milestones as per your schedule (details on email)
+🏗️ Monthly construction progress updates — right here on WhatsApp
+📞 <span class="var">{{3}}</span> remains your dedicated advisor for any queries
+
+Thank you for trusting Buloke. We're with you every step of the way. 🏡</div>
+          <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Rep name</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="direction">To Team (Internal)</div>
+      <div class="tcard">
+        <div class="tcard-header">
+          <div class="tcard-code">PB10b</div>
+          <span class="badge badge-internal">Internal</span>
+          <div class="tcard-right">
+            <div class="tcard-title">MOU upload confirmed — ops alert</div>
+            <div class="tcard-name">int_mou_uploaded</div>
+          </div>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-desc">Fires to ops/legal team when signed MOU is uploaded. Triggers the residential booking journey workflow in Salesforce. Action checklist included so nothing falls through the cracks.</div>
+          <div class="template-text">✅ <strong>MOU uploaded</strong>
+
+<span class="var">{{1}}</span> / <span class="var">{{2}}</span>
+Rep: <span class="var">{{3}}</span>
+
+Booking journey activated in Salesforce.
+Action checklist:
+✅ Verify MOU document completeness
+✅ Activate payment milestone schedule
+✅ Assign to post-sales coordination team
+✅ Log in booking journey record</div>
+          <div class="vars-line">Vars: {{1}} First name · {{2}} Project · {{3}} Rep name</div>
+          <div class="tcard-privacy">🔒 First name + project + rep only · deal value in CRM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STAGE: PAYMENT MILESTONES ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Stage 5 — Payment Milestones (Ongoing)</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">Fires on each payment milestone due date · Exact amounts always in email — never in WhatsApp · Utility category throughout</div>
+
+  <div class="template-row">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB11</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Payment milestone due</div>
+          <div class="tcard-name">buloke_milestone_due</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">7-day advance notice for an upcoming payment milestone. Amount and bank details in email. WhatsApp gives the heads-up + milestone name so customer can plan. Utility-compliant — purely transactional, no promotional angle.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+A payment milestone is due in <strong>7 days</strong> for your <span class="var">{{2}}</span> booking 📅
+
+Milestone: <span class="var">{{3}}</span>
+Due date: <span class="var">{{4}}</span>
+
+📧 Full amount and payment instructions are in your email.
+📞 Questions? Contact <span class="var">{{5}}</span>
+
+Please ensure payment is made before the due date to avoid any delays in your booking journey.</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Milestone name · {{4}} Due date · {{5}} Rep name</div>
+      </div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB11b</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Payment milestone overdue</div>
+          <div class="tcard-name">buloke_milestone_overdue</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent if milestone payment not logged by due date. Factual, no guilt. Clearly signals consequences of delay (per agreement terms in email). Directs to advisor for any genuine difficulty — payment plans can be discussed.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Your payment milestone for <strong><span class="var">{{2}}</span></strong> was due on <span class="var">{{3}}</span>.
+
+Milestone: <span class="var">{{4}}</span>
+
+We haven't received the payment yet. As per the agreement (details in your email), delays may affect your booking timeline.
+
+If you're facing any difficulty, please reach your advisor <span class="var">{{5}}</span> today — we can explore options.
+
+📞 <span class="var">{{5}}</span> is available to help.</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Due date · {{4}} Milestone name · {{5}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB12</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Payment received — receipt issued</div>
+          <div class="tcard-name">buloke_milestone_receipt</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Instant confirmation when any milestone payment is logged in Salesforce. Receipt reference given for the customer's records — full PDF receipt in email. Mentions next milestone so customer always knows what's ahead.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span> ✅
+
+We've received your payment for the <span class="var">{{3}}</span> milestone — <strong><span class="var">{{2}}</span></strong>.
+
+🧾 Receipt reference: <span class="var">{{4}}</span>
+📧 Official receipt PDF sent to your email.
+
+Next milestone: <span class="var">{{5}}</span> — due <span class="var">{{6}}</span>
+(Full details in email)
+
+Thank you for staying on track! 🌳 — Team Buloke</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Current milestone · {{4}} Receipt ref · {{5}} Next milestone name · {{6}} Next due date</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STAGE: BOOKING JOURNEY / CONSTRUCTION ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Stage 6 — Booking Journey + Construction Updates</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">Monthly automated update · Sent to all booked customers for that project · High referral value — keep customers engaged through a 2–4 year journey</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB13</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Construction milestone reached — customer update</div>
+          <div class="tcard-name">buloke_construction_milestone</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent when a significant construction milestone is logged for the project (e.g., foundation complete, slab poured, plastering started, etc.). Different from the monthly update — this one fires on a real event, not a schedule. Attaches photo or site video link where available. Drives excitement and referrals.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span> 🏗️
+
+Exciting update for <strong><span class="var">{{2}}</span></strong> — a major milestone has been reached!
+
+✅ Milestone: <span class="var">{{3}}</span>
+📅 Completed: <span class="var">{{4}}</span>
+
+<span class="var">{{5}}</span>
+
+Construction is progressing well and on schedule. Your home is taking shape. 🏡
+
+📸 <span class="var">{{6}}</span>
+
+— Team Buloke 🌳</div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Milestone name · {{4}} Date · {{5}} One-line description · {{6}} Site photo/video link (optional)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB14</div>
+        <span class="badge badge-marketing">Marketing</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Referral ask — happy customer</div>
+          <div class="tcard-name">buloke_referral_ask</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent 30–60 days after MOU is signed, when the customer is in a positive emotional state (just locked in their home, updates flowing). Best time to ask for a referral — soft ask, no incentive pressure, purely relationship-based. Routed to rep to follow up personally if they reply yes.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+We hope your <span class="var">{{2}}</span> journey with Buloke has been smooth so far 😊
+
+We build our community the same way we enter projects — early and personally. Most of our members come through word of mouth from people like you.
+
+If you know anyone who's been thinking about buying a home in Bangalore — especially at the pre-launch stage — we'd love to meet them.
+
+No pressure at all. Just a thought 🙏
+
+— <span class="var">{{3}}</span>, Buloke</div>
+        <div class="qr-row" style="margin-top:8px">
+          <div class="qr">Yes, I know someone</div>
+          <div class="qr">I'll keep it in mind</div>
+        </div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Rep name</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── GAP 1: QUOTE REVISED ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Gap Fix 1 — Quote Re-Creation (§11)</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">Triggered when sales team creates a new quote on the same Opportunity · Previous quote auto-rejected by Salesforce · Customer must be informed so they don't act on the old document</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB15</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Quote revised — updated version sent</div>
+          <div class="tcard-name">buloke_quote_revised</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Sent to customer whenever a quote is revised and a new one is created. The old quote is automatically rejected by Salesforce — the customer needs to know this clearly so they don't act on outdated pricing. New quote PDF goes to email. WhatsApp is the signal. Reason for revision keeps it transparent and builds trust.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+We've updated your quote for <strong><span class="var">{{2}}</span></strong> 📋
+
+Reason for revision: <span class="var">{{3}}</span>
+
+⚠️ Please note: your previous quote is no longer valid. Only the latest version should be used for reference.
+
+📧 The updated quote has been sent to your registered email — please review the new document.
+
+Any questions on the changes? I'm here to walk you through it.
+— <span class="var">{{4}}</span>, Buloke · 📞 <span class="var">{{5}}</span></div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Revision reason (pricing update / unit change / discount revised) · {{4}} Rep name · {{5}} Rep phone</div>
+        <div class="tcard-timing">On new quote creation → old quote auto-rejected in Salesforce</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── GAP 2: SITE VISIT INCOMPLETE GATE ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Gap Fix 2 — Site Visit Completion Gate (§6)</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">Fires internally if rep attempts to create a Quote without the Site Visit being marked Completed in Salesforce · Prevents process being skipped · Internal only — never sent to customer</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB16</div>
+        <span class="badge badge-internal">Internal</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Site visit not marked complete — block alert</div>
+          <div class="tcard-name">int_site_visit_incomplete</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Fires to rep (and CC's manager) when Salesforce detects a Quote creation attempt without the linked Site Visit record being marked Completed. This is a mandatory process gate per the lifecycle doc — skipping it breaks the audit trail. Rep must fix the Site Visit record before proceeding. Clear, firm instruction — no ambiguity.</div>
+        <div class="template-text">⚠️ <strong>Action blocked — Site Visit not completed</strong>
+
+Rep: <span class="var">{{1}}</span>
+Lead: <span class="var">{{2}}</span> / <span class="var">{{3}}</span>
+
+A Quote cannot be created until the Site Visit is marked as Completed in Salesforce.
+
+Steps to fix:
+1️⃣ Open the Site Visit record in Salesforce
+2️⃣ Mark Status = Completed
+3️⃣ Then proceed to Create Quote
+
+⚠️ Do NOT skip this step — it is a mandatory process gate.
+Manager has been notified.</div>
+        <div class="vars-line">Vars: {{1}} Rep name · {{2}} Lead first name · {{3}} Project</div>
+        <div class="tcard-privacy">🔒 Internal only — never sent to customer · rep + manager only</div>
+        <div class="tcard-timing">On quote creation attempt — site visit not marked Completed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── GAP 3: RECEIPT PDF GENERATED ─── -->
+  <div class="stage-div">
+    <div class="stage-div-line"></div>
+    <div class="stage-div-label">Gap Fix 3 — Receipt PDF Generated (§14 + §19)</div>
+    <div class="stage-div-line"></div>
+  </div>
+  <div class="flow-meta" style="margin-bottom:12px">Distinct from PB12 (milestone payment received) · Fires specifically when the Receipt record is created under a Booking Milestone and the PDF is available · Customer needs to know their official receipt is ready — separate from the payment acknowledgement</div>
+
+  <div class="template-row single">
+    <div class="tcard">
+      <div class="tcard-header">
+        <div class="tcard-code">PB17</div>
+        <span class="badge badge-utility">Utility</span>
+        <div class="tcard-right">
+          <div class="tcard-title">Receipt PDF ready — customer notification</div>
+          <div class="tcard-name">buloke_receipt_ready</div>
+        </div>
+      </div>
+      <div class="tcard-body">
+        <div class="tcard-desc">Fires when the Receipt record is generated under a Booking Milestone in Salesforce and the PDF is available. Separate from PB12 which acknowledges the payment — this one specifically tells the customer their official receipt document is ready and where to find it. Important for customers managing home loans, tax records, or legal documentation. Utility-compliant — purely transactional.</div>
+        <div class="template-text">Hi <span class="var">{{1}}</span>,
+
+Your official receipt for <strong><span class="var">{{2}}</span></strong> is ready 🧾
+
+📋 Milestone: <span class="var">{{3}}</span>
+🔖 Receipt number: <span class="var">{{4}}</span>
+📅 Generated on: <span class="var">{{5}}</span>
+
+📧 The receipt PDF has been sent to your registered email. Please save it for your records — you may need it for:
+✅ Home loan disbursement
+✅ Income tax documentation
+✅ Legal / registration purposes
+
+Need a copy resent or have a query?
+— <span class="var">{{6}}</span>, Buloke · 📞 <span class="var">{{7}}</span></div>
+        <div class="vars-line">Vars: {{1}} Name · {{2}} Project · {{3}} Milestone name · {{4}} Receipt number · {{5}} Date · {{6}} Rep name · {{7}} Rep phone</div>
+        <div class="tcard-timing">On Receipt record creation under Booking Milestone · Distinct from payment received acknowledgement (PB12)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-end" style="margin-top:16px">
+    Customer replies to referral → rep takes over manually · Payment milestones continue until full payment · PB17 fires per receipt, PB12 fires per payment received — these are two distinct triggers · Monthly updates (C17b in Tab 2) continue until possession · On possession: handover message sent (extend C17b with a final possession variant) · Customer moves to alumni segment for future project launches · <strong>Gap §18 Booking Journey internal steps remain pending — separate Booking Journey doc required to build those templates</strong>
+  </div>
+
+</div>
+<!-- end postbooking section -->
+
+</div><!-- end .main -->
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
